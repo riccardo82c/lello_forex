@@ -226,15 +226,19 @@ class PipCalculator(tk.Tk):
 
         status_row = tk.Frame(sel_card, bg=CARD)
         status_row.pack(fill="x", padx=14, pady=(0, 8))
+        # il pulsante viene impacchettato per primo a destra, così riserva
+        # sempre il suo spazio e la scritta di stato non lo spinge fuori
+        self.refresh_btn = tk.Button(status_row, text="🔄  Aggiorna",
+                                     font=self.fn_sm, bg=BORDER, fg=ACCENT,
+                                     activebackground=ACCENT, activeforeground=BG,
+                                     relief="flat", bd=0, padx=12, pady=3,
+                                     cursor="hand2", command=self._refresh_rates)
+        self.refresh_btn.pack(side="right")
+        self.refresh_btn.bind("<Enter>", lambda e: self._btn_hover(True))
+        self.refresh_btn.bind("<Leave>", lambda e: self._btn_hover(False))
         self.status_lbl = tk.Label(status_row, text="⏳  Carico i tassi BCE…",
                                    font=self.fn_sm, bg=CARD, fg=TEXT_DIM, anchor="w")
-        self.status_lbl.pack(side="left")
-        self.refresh_btn = tk.Button(status_row, text="🔄 Aggiorna",
-                                     font=self.fn_sm, bg=BORDER, fg=TEXT,
-                                     activebackground=ACCENT, activeforeground=BG,
-                                     relief="flat", bd=0, padx=8, cursor="hand2",
-                                     command=self._refresh_rates)
-        self.refresh_btn.pack(side="right")
+        self.status_lbl.pack(side="left", fill="x", expand=True)
 
         # ── INPUT ────────────────────────────────────────────────────────────
         in_outer, in_card = self._card(wrapper, "✏️  PARAMETRI DI INPUT")
@@ -302,6 +306,11 @@ class PipCalculator(tk.Tk):
         return outer, inner
 
     # ── Tassi ufficiali BCE ──────────────────────────────────────────────────
+    def _btn_hover(self, on):
+        if str(self.refresh_btn["state"]) == "normal":
+            self.refresh_btn.config(bg=ACCENT if on else BORDER,
+                                    fg=BG if on else ACCENT)
+
     def _refresh_rates(self):
         self.status_lbl.config(text="⏳  Carico i tassi BCE…", fg=TEXT_DIM)
         self.refresh_btn.config(state="disabled")
@@ -323,17 +332,17 @@ class PipCalculator(tk.Tk):
                     INSTRUMENTS[cat][pair] = round(value, 4)
                     updated += 1
         self.status_lbl.config(
-            text=f"✅  Tassi BCE del {date} · {updated} coppie forex aggiornate",
+            text=f"✅  Tassi BCE {date} · {updated} forex",
             fg=ACCENT2)
-        self.refresh_btn.config(state="normal")
+        self.refresh_btn.config(state="normal", fg=ACCENT)
         if self.cat_var.get() in FOREX_CATEGORIES:
             self._on_instrument_change()
 
     def _rates_failed(self):
         self.status_lbl.config(
-            text="⚠️  Offline — uso i valori stimati (BCE non raggiungibile)",
+            text="⚠️  Offline · valori stimati",
             fg=YELLOW)
-        self.refresh_btn.config(state="normal")
+        self.refresh_btn.config(state="normal", fg=ACCENT)
 
     def _on_category_change(self, event=None):
         cat = self.cat_var.get()
